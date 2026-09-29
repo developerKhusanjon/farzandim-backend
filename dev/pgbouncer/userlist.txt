@@ -1,0 +1,3 @@
+"farzandim_school" "farzandim_school_dev"
+"farzandim_mobile" "farzandim_mobile_dev"
+"farzandim_admin" "farzandim_admin_dev"

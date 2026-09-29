@@ -1,0 +1,94 @@
+# =============================================================================
+# Lokal ishlab chiqish muhiti.
+#
+# Produksiyada bular DigitalOcean boshqaruvidagi xizmatlar bilan almashtiriladi:
+#   postgres → DigitalOcean Managed PostgreSQL (pgvector kengaytmasi yoqiladi)
+#   valkey   → DigitalOcean Managed Valkey
+#   minio    → DigitalOcean Spaces
+# Servislarning konfiguratsiyasi faqat muhit o'zgaruvchilari orqali o'zgaradi.
+# =============================================================================
+services:
+  postgres:
+    # pgvector oldindan o'rnatilgan tasvir — migratsiya `CREATE EXTENSION vector` qiladi
+    image: pgvector/pgvector:pg16
+    container_name: farzandim-postgres
+    environment:
+      POSTGRES_DB: farzandim
+      POSTGRES_USER: farzandim
+      POSTGRES_PASSWORD: farzandim
+    ports:
+      # Portni band bo'lsa .env dagi POSTGRES_PORT orqali o'zgartiring
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U farzandim -d farzandim"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: farzandim-valkey
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "${VALKEY_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Ixtiyoriy: DigitalOcean "Connection Pools" (PgBouncer, transaction rejimi)
+  # bilan bir xil muhit. Standart holatda ishga tushmaydi:
+  #   docker compose --profile pool up -d pgbouncer
+  # Servislar: DB_URL=...localhost:6432/<baza>?stringtype=unspecified&prepareThreshold=0
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.2-p0
+    container_name: farzandim-pgbouncer
+    profiles: ["pool"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PGBOUNCER_PORT:-6432}:6432"
+    volumes:
+      - ./dev/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./dev/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+
+  # Spaces (S3) o'rniga lokal muqobil. Bir xil SigV4 imzosi ishlaydi.
+  minio:
+    image: minio/minio:latest
+    container_name: farzandim-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: farzandim
+      MINIO_ROOT_PASSWORD: farzandim-secret
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Bucket'ni bir marta yaratadi va yopiladi. Bucket PRIVATE qoladi.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 farzandim farzandim-secret; do sleep 2; done;
+      mc mb --ignore-existing local/farzandim-dev;
+      mc anonymous set none local/farzandim-dev;
+      echo 'bucket tayyor (private)';
+      "
+
+volumes:
+  postgres-data:
+  minio-data:
