@@ -28,6 +28,7 @@ import uz.farzandim.shared.api.ApiException
 import uz.farzandim.shared.api.ApiResponse
 import uz.farzandim.shared.security.CurrentUser
 import uz.farzandim.shared.security.Roles
+import uz.farzandim.shared.analytics.SubjectScoreDto
 import java.util.UUID
 
 @Path("")
@@ -60,7 +61,7 @@ class SchoolResource {
         ApiResponse.of(schools.stats(scoped(id)))
 
     @GET @Path("/schools/{id}/subject-averages")
-    fun subjectAverages(@PathParam("id") id: UUID): ApiResponse<List<Map<String, Any>>> =
+    fun subjectAverages(@PathParam("id") id: UUID): ApiResponse<List<SubjectScoreDto>> =
         ApiResponse.of(schools.subjectAverages(scoped(id)))
 
     /* ---------------------------------- Fanlar ------------------------------ */

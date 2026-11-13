@@ -1,6 +1,7 @@
 package uz.farzandim.shared.domain
 
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
@@ -148,7 +149,9 @@ class ScheduleSlot : AuditedEntity() {
     @Column(name = "subject_id", nullable = false) lateinit var subjectId: UUID
     @Column(name = "teacher_id", nullable = false) lateinit var teacherId: UUID
     @Column(name = "day_of_week", nullable = false) var dayOfWeek: Int = 1
+    @Convert(converter = LocalTimeTextConverter::class)
     @Column(name = "start_time", nullable = false) lateinit var startTime: LocalTime
+    @Convert(converter = LocalTimeTextConverter::class)
     @Column(name = "end_time", nullable = false) lateinit var endTime: LocalTime
     @Column(name = "room") var room: String? = null
 
@@ -170,7 +173,9 @@ class Lesson : AuditedEntity() {
     @Column(name = "teacher_id", nullable = false) lateinit var teacherId: UUID
     @Column(name = "topic_id") var topicId: UUID? = null
     @Column(name = "lesson_date", nullable = false) lateinit var lessonDate: LocalDate
+    @Convert(converter = LocalTimeTextConverter::class)
     @Column(name = "start_time", nullable = false) lateinit var startTime: LocalTime
+    @Convert(converter = LocalTimeTextConverter::class)
     @Column(name = "end_time", nullable = false) lateinit var endTime: LocalTime
     @Column(name = "room") var room: String? = null
     @Column(name = "title", nullable = false) var title: String = ""

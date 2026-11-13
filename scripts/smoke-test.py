@@ -86,6 +86,25 @@ results.append(ok("homework ro'yxati", st == 200 and len(hw["data"]) > 0,
 st, sch = call(f"/schedule?groupId={gid}", token, school)
 results.append(ok("jadval", st == 200 and len(sch["data"]) == 20, f"slot={len(sch['data'])}"))
 
+# 8a. Dars vaqti HH:MM formatida
+first_slot = sch["data"][0] if sch["data"] else {}
+results.append(ok("dars vaqti HH:MM", len(first_slot.get("startTime", "")) == 5, first_slot.get("startTime")))
+# Vaqt mintaqasiga qarab siljimaydi (seed'dagi birinchi dars 08:30)
+results.append(ok("dars vaqti bazadagidek (mintaqa siljimagan)", first_slot.get("startTime") == "08:30",
+                  first_slot.get("startTime")))
+
+# 8b. Majburiy parametr yo'q — 422
+st, miss = call("/gradebook", token, school)
+results.append(ok("majburiy parametr yo'q — 422",
+                  st == 422 and "groupId" in (miss.get("error", {}).get("fields") or {}),
+                  (st, miss.get("error", {}).get("code"))))
+
+# 8c. Fanlar o'rtachasi
+st, avg = call(f"/schools/{school}/subject-averages", token, school)
+first_avg = avg["data"][0] if st == 200 and avg["data"] else {}
+results.append(ok("fanlar o'rtachasi subjectName/delta", "subjectName" in first_avg and "delta" in first_avg,
+                  sorted(first_avg)))
+
 # 9. Teachers
 st, te = call("/teachers", token, school)
 results.append(ok("o'qituvchilar", st == 200 and len(te["data"]) == 4,
@@ -111,6 +130,12 @@ if lesson:
     st, att = call("/attendance/bulk", token, school, "POST",
                    {"records": [{"studentId": stu, "lessonId": lesson, "status": "LATE", "minutesLate": 7}]})
     results.append(ok("davomat belgilash", st == 200, att.get("error") or att["data"][0]["status"]))
+
+    # 12a. O'quvchi davomati
+    st, satt = call(f"/students/{stu}/attendance", token, school)
+    marked = [a for a in (satt.get("data") or []) if a["lessonId"] == lesson]
+    results.append(ok("o'quvchi davomati", st == 200 and len(marked) == 1 and marked[0]["status"] == "LATE",
+                      (st, len(satt.get("data") or []))))
 
 # 13. Bildirishnoma ota-onaga yetdimi
 st, notif = call("/notifications", token, school)

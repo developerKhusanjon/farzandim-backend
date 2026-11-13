@@ -115,6 +115,16 @@ class PeopleResource {
         journal.listGrades(schoolId, id, from?.let(LocalDate::parse), to?.let(LocalDate::parse)),
     )
 
+    /** O'quvchi davomati, standart — oxirgi 60 kun */
+    @GET @Path("/students/{id}/attendance")
+    fun attendance(
+        @PathParam("id") id: UUID,
+        @QueryParam("from") from: String?,
+        @QueryParam("to") to: String?,
+    ) = ApiResponse.of(
+        journal.listStudentAttendance(schoolId, id, from?.let(LocalDate::parse), to?.let(LocalDate::parse)),
+    )
+
     @GET @Path("/students/{id}/skills")
     fun skills(@PathParam("id") id: UUID) = ApiResponse.of(assessment.listSkills(schoolId, id))
 

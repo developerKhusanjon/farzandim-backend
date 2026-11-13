@@ -194,6 +194,22 @@ class JournalService {
         return records.map { mappers.attendance(it, lesson.subjectId) }
     }
 
+    /** O'quvchi davomati (standart — oxirgi 60 kun), yangisi birinchi. */
+    fun listStudentAttendance(schoolId: UUID, studentId: UUID, from: LocalDate?, to: LocalDate?): List<AttendanceDto> {
+        lookups.load(schoolId)
+        val student = students.requireInSchool(studentId, schoolId, "O'quvchi")
+        student.groupId?.let { access.assertCanTouchGroup(it) }
+        val until = to ?: LocalDate.now()
+        val records = attendance.listByStudent(schoolId, studentId, from ?: until.minusDays(60), until)
+        val lessonIds = records.map { it.lessonId }.distinct()
+        val subjectByLesson = if (lessonIds.isEmpty()) {
+            emptyMap()
+        } else {
+            lessons.list("schoolId = ?1 and id in ?2", schoolId, lessonIds).associate { it.id to it.subjectId }
+        }
+        return records.map { mappers.attendance(it, subjectByLesson[it.lessonId]) }
+    }
+
     @Transactional
     fun markAttendanceBulk(schoolId: UUID, records: List<AttendanceBody>): List<AttendanceDto> {
         lookups.load(schoolId)
