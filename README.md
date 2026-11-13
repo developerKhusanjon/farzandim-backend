@@ -43,7 +43,21 @@ profilida) — ruxsat etilmagan jadvalga tegadigan kod dev'dayoq
 "permission denied" beradi, production'da emas.
 
 Port 5432 yoki 6379 band bo'lsa — `.env` dagi `POSTGRES_PORT` / `VALKEY_PORT` ni
-o'zgartiring va `DB_URL` / `VALKEY_URL` ni moslang.
+o'zgartiring va `DB_URL` / `VALKEY_URL` ni moslang. Masalan (5442/6389):
+
+```bash
+POSTGRES_PORT=5442 VALKEY_PORT=6389 docker compose up -d postgres valkey
+export DB_URL='jdbc:postgresql://localhost:5442/farzandim?stringtype=unspecified'
+export VALKEY_URL='redis://localhost:6389'
+./mvnw -pl school-backend quarkus:dev -Ddebug=false   # debug porti 5005 — uchala servis
+                                                       # birga ishlashi uchun o'chiriladi
+```
+
+`shared` modul o'zgarsa — `./mvnw -pl shared install -DskipTests` va servislarni qayta
+ishga tushiring (dev rejim uni qayta yuklay olmaydi).
+
+Frontendlar: web CRM (5180) `/api` ni 8081 ga proksi qiladi, mobil ilova
+`.env.development` orqali 8082 ga ulanadi, admin paneli (5190) — 8083 ga.
 
 ### Namunaviy hisoblar (dev seed)
 
@@ -56,6 +70,10 @@ o'zgartiring va `DB_URL` / `VALKEY_URL` ni moslang.
 
 Seed 1 maktab, 3 guruh, 30 o'quvchi, 6 fan, ~250 dars, ~900 baho va
 ~2400 davomat yozuvini yaratadi — frontend real ma'lumotda ishlashi uchun.
+
+`V903`/`V904` dev seed'lari fanlarga ikonka beradi va jadvaldagi o'qituvchini
+guruh+fanga biriktirilgan o'qituvchiga moslaydi (aks holda o'qituvchi o'z darsiga
+baho qo'ya olmas edi).
 
 `V901` seed super admin paneli uchun yana 5 ta maktab qo'shadi — har biri
 boshqa holatda (hammasining paroli `parol123`):
@@ -74,11 +92,13 @@ boshqa holatda (hammasining paroli `parol123`):
 python3 scripts/smoke-test.py
 ```
 
-98 ta tekshiruv: login va rollar, tenant izolyatsiyasi, refresh rotatsiyasi va
+103 ta tekshiruv: login va rollar, tenant izolyatsiyasi, refresh rotatsiyasi va
 qayta ishlatishni aniqlash, jurnal, uy vazifasi, ota-ona kesimi, super admin
 amallari, SMS / email / push kanallari, mustaqil ota-ona (B2C) oqimi,
 xato kodlari, maktabni ulash (bir nechta admin, superadmin huquqlari),
-tarif cheklovlari (BASIC'da AI yopiq), obuna tugaganda refresh yopilishi.
+tarif cheklovlari (BASIC'da AI yopiq), obuna tugaganda refresh yopilishi,
+dars vaqti `HH:MM` va vaqt mintaqasida siljimasligi, majburiy parametr yo'q bo'lsa
+422 (500 emas), fanlar o'rtachasi, o'quvchi davomati.
 
 ### Hujjat va kuzatuv
 

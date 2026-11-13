@@ -105,6 +105,31 @@ private object ConstraintMessages {
 }
 
 /**
+ * Resurs metodining majburiy (Kotlin non-null) query parametri berilmagan.
+ *
+ * Kotlin buni metodga kirishda NPE bilan bildiradi:
+ * "Parameter specified as non-null is null: method X.y, parameter groupId".
+ * Bu mijoz xatosi — 500 emas, qaysi parametr yetishmayotganini aytamiz.
+ * Faqat `.api.` paketidagi metodning o'z parametri: servis ichidagi shunday
+ * NPE haqiqiy dastur xatosi bo'lib qoladi.
+ */
+private object MissingParameter {
+    private val pattern = Regex("""^Parameter specified as non-null is null: method \S+, parameter (\w+)$""")
+
+    fun resolve(e: Throwable): ApiException? {
+        if (e !is NullPointerException) return null
+        val name = pattern.find(e.message.orEmpty())?.groupValues?.get(1) ?: return null
+        val origin = e.stackTrace.firstOrNull()?.className.orEmpty()
+        if (!origin.contains(".api.")) return null
+        return ApiException(
+            ErrorCode.VALIDATION_ERROR,
+            "Majburiy parametr ko'rsatilmagan: $name",
+            mapOf(name to "Majburiy parametr"),
+        )
+    }
+}
+
+/**
  * Oxirgi to'siq: kutilmagan istisno hech qachon stacktrace bilan tashqariga chiqmaydi.
  * Loglarda traceId bo'yicha topiladi.
  */
@@ -113,7 +138,7 @@ class FallbackExceptionMapper : ExceptionMapper<Throwable> {
     private val log = Logger.getLogger(FallbackExceptionMapper::class.java)
 
     override fun toResponse(e: Throwable): Response {
-        ConstraintMessages.resolve(e)?.let { mapped ->
+        (ConstraintMessages.resolve(e) ?: MissingParameter.resolve(e))?.let { mapped ->
             return Response.status(mapped.code.status)
                 .entity(ApiErrorResponse(ApiErrorBody(mapped.code.name, mapped.message, mapped.fields)))
                 .build()

@@ -15,6 +15,7 @@ import uz.farzandim.school.dto.TopicBody
 import uz.farzandim.school.dto.TopicDto
 import uz.farzandim.school.dto.UpdateSchoolBody
 import uz.farzandim.shared.analytics.PerformanceService
+import uz.farzandim.shared.analytics.SubjectScoreDto
 import uz.farzandim.shared.api.ApiException
 import uz.farzandim.shared.cache.CacheKeys
 import uz.farzandim.shared.cache.ValkeyService
@@ -127,16 +128,23 @@ class SchoolService {
         return (result as? Number)?.toLong() ?: 0
     }
 
-    /** Fan bo'yicha maktab o'rtachasi — dashboard diagrammasi uchun. */
-    fun subjectAverages(schoolId: UUID): List<Map<String, Any>> {
+    /**
+     * Fan bo'yicha maktab o'rtachasi — dashboard va hisobot diagrammasi uchun.
+     * `score` — oxirgi 30 kun, `delta` — undan oldingi 30 kunga nisbatan o'zgarish
+     * (o'sha davrda baho bo'lmasa 0). Shakl — umumiy `SubjectScoreDto`.
+     */
+    fun subjectAverages(schoolId: UUID): List<SubjectScoreDto> {
         @Suppress("UNCHECKED_CAST")
         val rows = em.createNativeQuery(
             """
             select s.id, s.name, s.short_name, s.color_key,
-                   coalesce(avg(g.value / g.max_value * 100), 0)
+                   coalesce(avg(g.value / g.max_value * 100)
+                            filter (where g.graded_on >= current_date - interval '30 days'), 0) as current,
+                   avg(g.value / g.max_value * 100)
+                            filter (where g.graded_on < current_date - interval '30 days') as previous
             from subjects s
             left join grades g on g.subject_id = s.id
-                 and g.graded_on >= current_date - interval '30 days'
+                 and g.graded_on >= current_date - interval '60 days'
             where s.school_id = :school and not s.archived
             group by s.id, s.name, s.short_name, s.color_key
             order by 5 desc
@@ -144,12 +152,15 @@ class SchoolService {
         ).setParameter("school", schoolId).resultList as List<Array<Any?>>
 
         return rows.map {
-            mapOf(
-                "subjectId" to (it[0] as UUID).toString(),
-                "name" to (it[1] as String),
-                "shortName" to (it[2] as String),
-                "colorKey" to (it[3] as String),
-                "score" to ((it[4] as Number).toDouble()).roundToInt(),
+            val current = (it[4] as Number).toDouble()
+            val previous = (it[5] as Number?)?.toDouble()
+            SubjectScoreDto(
+                subjectId = it[0] as UUID,
+                subjectName = it[1] as String,
+                shortName = it[2] as String,
+                colorKey = it[3] as String,
+                score = current.roundToInt(),
+                delta = if (previous == null) 0 else (current - previous).roundToInt(),
             )
         }
     }
