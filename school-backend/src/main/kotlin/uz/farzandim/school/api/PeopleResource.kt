@@ -115,7 +115,7 @@ class PeopleResource {
         journal.listGrades(schoolId, id, from?.let(LocalDate::parse), to?.let(LocalDate::parse)),
     )
 
-    /** Profilning "Davomat" bo'limi (standart — oxirgi 60 kun) */
+    /** O'quvchi davomati, standart — oxirgi 60 kun */
     @GET @Path("/students/{id}/attendance")
     fun attendance(
         @PathParam("id") id: UUID,

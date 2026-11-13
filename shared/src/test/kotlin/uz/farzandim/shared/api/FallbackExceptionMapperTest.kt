@@ -5,20 +5,15 @@ import org.junit.jupiter.api.Test
 import java.lang.reflect.InvocationTargetException
 import java.util.UUID
 
-/**
- * Kotlin resurs metodining non-null query parametri berilmasa (`GET /gradebook`
- * `?groupId=` siz) Kotlin metodga kirishda NPE tashlaydi. Bu mijoz xatosi —
- * javob 500 "Ichki xatolik" emas, qaysi parametr yetishmayotganini aytadigan
- * VALIDATION_ERROR bo'lishi kerak.
- */
+/** Majburiy parametr berilmasa 422 va parametr nomi qaytadi. */
 class FallbackExceptionMapperTest {
 
-    /** Haqiqiy resursga o'xshash: paket nomida `.api.`, parametr non-null */
+    /** Resursga o'xshash: paket nomida `.api.` bor */
     class FakeGradebookResource {
         fun gradebook(groupId: UUID, subjectId: UUID): String = "$groupId/$subjectId"
     }
 
-    /** Kotlin kompilyatori yaratgan haqiqiy NPE (sun'iy xabar emas) */
+    /** Kotlin yaratgan haqiqiy NPE */
     private fun missingParameterNpe(): Throwable {
         val method = FakeGradebookResource::class.java
             .getMethod("gradebook", UUID::class.java, UUID::class.java)

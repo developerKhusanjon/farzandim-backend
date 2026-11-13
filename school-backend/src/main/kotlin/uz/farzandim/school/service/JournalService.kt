@@ -194,12 +194,7 @@ class JournalService {
         return records.map { mappers.attendance(it, lesson.subjectId) }
     }
 
-    /**
-     * O'quvchining davomati — profilning "Davomat" bo'limi uchun
-     * (`GET /students/{id}/attendance`, docs/03-api-contract.md).
-     * Standart oraliq — oxirgi 60 kun, yangisi birinchi. Fan har yozuvning darsidan
-     * bitta so'rov bilan olinadi.
-     */
+    /** O'quvchi davomati (standart — oxirgi 60 kun), yangisi birinchi. */
     fun listStudentAttendance(schoolId: UUID, studentId: UUID, from: LocalDate?, to: LocalDate?): List<AttendanceDto> {
         lookups.load(schoolId)
         val student = students.requireInSchool(studentId, schoolId, "O'quvchi")

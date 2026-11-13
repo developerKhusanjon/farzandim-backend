@@ -6,11 +6,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalTime
 import java.util.TimeZone
 
-/**
- * Dars vaqti bazadan qanday yozilgan bo'lsa, shunday qaytishi kerak — JVM qaysi
- * vaqt mintaqasida ishlashidan qat'i nazar (dev kompyuter: Asia/Tashkent,
- * u 1970-yilda UTC+6 bo'lgan; server: UTC).
- */
+/** Vaqt JVM mintaqasidan qat'i nazar o'zgarmay saqlanadi */
 class LocalTimeTextConverterTest {
 
     private val converter = LocalTimeTextConverter()
@@ -22,7 +18,7 @@ class LocalTimeTextConverterTest {
 
     @Test
     fun `postgres time text is read back unchanged`() {
-        // pgjdbc `time` ustunini getString bilan "08:30:00" ko'rinishida beradi
+        // pgjdbc `time` ustunini "08:30:00" ko'rinishida beradi
         assertEquals(LocalTime.of(8, 30), converter.convertToEntityAttribute("08:30:00"))
     }
 

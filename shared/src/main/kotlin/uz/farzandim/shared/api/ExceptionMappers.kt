@@ -105,13 +105,8 @@ private object ConstraintMessages {
 }
 
 /**
- * Resurs metodining majburiy (Kotlin non-null) query parametri berilmagan.
- *
- * Kotlin buni metodga kirishda NPE bilan bildiradi:
- * "Parameter specified as non-null is null: method X.y, parameter groupId".
- * Bu mijoz xatosi — 500 emas, qaysi parametr yetishmayotganini aytamiz.
- * Faqat `.api.` paketidagi metodning o'z parametri: servis ichidagi shunday
- * NPE haqiqiy dastur xatosi bo'lib qoladi.
+ * Majburiy query parametri berilmagan — Kotlin resurs metodiga kirishda NPE tashlaydi.
+ * Faqat `.api.` paketidagi metodlar uchun: servis ichidagi NPE 500 bo'lib qoladi.
  */
 private object MissingParameter {
     private val pattern = Regex("""^Parameter specified as non-null is null: method \S+, parameter (\w+)$""")

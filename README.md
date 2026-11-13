@@ -54,7 +54,7 @@ export VALKEY_URL='redis://localhost:6389'
 ```
 
 `shared` modul o'zgarsa — `./mvnw -pl shared install -DskipTests` va servislarni qayta
-ishga tushiring (dev rejim uni qayta yuklay olmaydi).
+ishga tushiring.
 
 Frontendlar: web CRM (5180) `/api` ni 8081 ga proksi qiladi, mobil ilova
 `.env.development` orqali 8082 ga ulanadi, admin paneli (5190) — 8083 ga.
@@ -71,9 +71,8 @@ Frontendlar: web CRM (5180) `/api` ni 8081 ga proksi qiladi, mobil ilova
 Seed 1 maktab, 3 guruh, 30 o'quvchi, 6 fan, ~250 dars, ~900 baho va
 ~2400 davomat yozuvini yaratadi — frontend real ma'lumotda ishlashi uchun.
 
-`V903`/`V904` dev seed'lari fanlarga ikonka beradi va jadvaldagi o'qituvchini
-guruh+fanga biriktirilgan o'qituvchiga moslaydi (aks holda o'qituvchi o'z darsiga
-baho qo'ya olmas edi).
+`V903`/`V904` dev seed'lari: fan ikonkalari va jadvaldagi o'qituvchini guruh+fanga
+biriktirilgan o'qituvchiga moslash.
 
 `V901` seed super admin paneli uchun yana 5 ta maktab qo'shadi — har biri
 boshqa holatda (hammasining paroli `parol123`):

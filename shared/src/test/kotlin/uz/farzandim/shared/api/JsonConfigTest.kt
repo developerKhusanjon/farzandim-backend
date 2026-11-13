@@ -8,16 +8,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
 
-/**
- * Dars vaqtlari shartnomada "08:30" (docs/02-data-model.md). Jackson'ning
- * standarti esa "08:30:00" — web va mobil ilova uni ekranda xom ko'rsatadi.
- */
+/** LocalTime JSON formati */
 class JsonConfigTest {
 
-    /**
-     * Quarkus standart mapper'i kabi: JavaTimeModule ro'yxatda, sanalar raqam emas
-     * (`quarkus.jackson.write-dates-as-timestamps=false`), keyin bizning customizer.
-     */
+    /** Quarkus standart mapper'i kabi sozlangan */
     private val mapper = ObjectMapper()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -28,11 +22,7 @@ class JsonConfigTest {
         assertEquals("\"08:30\"", mapper.writeValueAsString(LocalTime.of(8, 30)))
     }
 
-    /**
-     * Quarkus o'zining JavaTimeModule'ini ham customizer orqali ro'yxatga oladi.
-     * Jackson'da keyin qo'shilgan modul serializer'i ustun turadi — shuning uchun
-     * bizniki eng oxirida ishlashi shart (aks holda tirik servisda yana "08:30:00").
-     */
+    /** Quarkus JavaTimeModule'ni customizer orqali qo'shadi — bizniki undan keyin ishlashi kerak */
     @Test
     fun `runs after every other customizer`() {
         assertEquals(ObjectMapperCustomizer.MINIMUM_PRIORITY, JsonConfig().priority())

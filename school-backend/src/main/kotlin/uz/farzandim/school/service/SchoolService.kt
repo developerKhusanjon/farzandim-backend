@@ -128,11 +128,7 @@ class SchoolService {
         return (result as? Number)?.toLong() ?: 0
     }
 
-    /**
-     * Fan bo'yicha maktab o'rtachasi — dashboard va hisobot diagrammasi uchun.
-     * `score` — oxirgi 30 kun, `delta` — undan oldingi 30 kunga nisbatan o'zgarish
-     * (o'sha davrda baho bo'lmasa 0). Shakl — umumiy `SubjectScoreDto`.
-     */
+    /** Fanlar bo'yicha o'rtacha: score — oxirgi 30 kun, delta — oldingi 30 kunga nisbatan. */
     fun subjectAverages(schoolId: UUID): List<SubjectScoreDto> {
         @Suppress("UNCHECKED_CAST")
         val rows = em.createNativeQuery(
